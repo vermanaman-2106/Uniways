@@ -31,8 +31,8 @@ export default function HomeScreen() {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        // No token, redirect to login
-        router.replace('/login');
+        // No token, redirect to welcome screen first
+        router.push('/welcome' as any);
         return;
       }
 
@@ -48,14 +48,14 @@ export default function HomeScreen() {
       if (response.ok && data.success) {
         setUser(data.data);
       } else {
-        // Invalid token, clear and redirect to login
+        // Invalid token, clear and redirect to welcome
         await AsyncStorage.removeItem('token');
-        router.replace('/login');
+        router.push('/welcome' as any);
       }
     } catch (error) {
       console.error('Error checking auth:', error);
       await AsyncStorage.removeItem('token');
-      router.replace('/login');
+      router.push('/welcome' as any);
     } finally {
       setCheckingAuth(false);
       setLoading(false);
@@ -185,7 +185,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </Link>
           ))}
-        </View>
+    </View>
       </ScrollView>
     </ThemedView>
   );
