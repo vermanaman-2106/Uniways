@@ -4,9 +4,9 @@
 // Find your IP: Mac: ipconfig getifaddr en0 | Windows: ipconfig (look for IPv4)
 
 export const API_BASE_URL = __DEV__
-  ? 'http://localhost:3000/api' // For simulator/emulator
+  ? 'http://localhost:3000/api' // For simulator/emulator (local development)
   // ? 'http://YOUR_IP_ADDRESS:3000/api' // For physical device - uncomment and add your IP
-  : 'http://localhost:3000/api'; // Production - update with your production URL
+  : 'https://uniways-backend.onrender.com/api'; // Production backend URL
 
 export const API_ENDPOINTS = {
   faculty: '/faculty',
