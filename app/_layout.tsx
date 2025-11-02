@@ -74,6 +74,24 @@ export default function RootLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="complaints/index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="complaints/create"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="complaints/[id]"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

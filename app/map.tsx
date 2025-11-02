@@ -1,97 +1,71 @@
-import { StyleSheet, View, Dimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { WebView } from 'react-native-webview';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
-
-const { width } = Dimensions.get('window');
+import { GOOGLE_MAPS_API_KEY, MUJ_COORDINATES } from '@/constants/api';
 
 export default function MapScreen() {
-  const buildings = [
-    { id: 1, name: 'Main Building', x: '30%', y: '25%', color: Colors.primary },
-    { id: 2, name: 'Library', x: '20%', y: '50%', color: Colors.primaryDark },
-    { id: 3, name: 'Science Lab', x: '60%', y: '30%', color: Colors.primary },
-    { id: 4, name: 'Sports Complex', x: '70%', y: '65%', color: Colors.primaryDark },
-    { id: 5, name: 'Cafeteria', x: '45%', y: '55%', color: Colors.primary },
-    { id: 6, name: 'Administration', x: '25%', y: '15%', color: Colors.primaryDark },
-  ];
 
-  const parkingLots = [
-    { id: 'P1', name: 'Lot A', x: '15%', y: '75%' },
-    { id: 'P2', name: 'Lot B', x: '55%', y: '80%' },
-    { id: 'P3', name: 'Lot C', x: '80%', y: '45%' },
-  ];
+  // Create Google Maps HTML
+  const createGoogleMapsHTML = () => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { margin: 0; padding: 0; }
+            #map { height: 100vh; width: 100%; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script src="https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places"></script>
+          <script>
+            const map = new google.maps.Map(document.getElementById('map'), {
+              center: { lat: ${MUJ_COORDINATES.latitude}, lng: ${MUJ_COORDINATES.longitude} },
+              zoom: 17,
+              mapTypeId: 'satellite',
+              tilt: 45,
+              heading: 0
+            });
+          </script>
+        </body>
+      </html>
+    `;
+  };
+
 
   return (
     <ThemedView style={styles.container}>
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <ThemedText type="title" style={styles.title}>College Map</ThemedText>
-        <ThemedText style={styles.subtitle}>Campus layout and locations</ThemedText>
+        <ThemedText type="title" style={styles.title}>Manipal University Jaipur</ThemedText>
+        <ThemedText style={styles.subtitle}>Google Maps - 3D Satellite View</ThemedText>
       </View>
       
-      <View style={styles.mapContainer}>
-        <View style={styles.map}>
-          {/* Buildings */}
-          {buildings.map((building) => (
-            <View
-              key={building.id}
-              style={[
-                styles.building,
-                {
-                  left: building.x,
-                  top: building.y,
-                  backgroundColor: building.color,
-                },
-              ]}>
-              <ThemedText style={styles.buildingText}>{building.name}</ThemedText>
-            </View>
-          ))}
-          
-          {/* Parking Lots */}
-          {parkingLots.map((lot) => (
-            <View
-              key={lot.id}
-              style={[
-                styles.parkingLot,
-                {
-                  left: lot.x,
-                  top: lot.y,
-                  backgroundColor: Colors.white,
-                  borderColor: Colors.primary,
-                },
-              ]}>
-              <ThemedText style={styles.parkingText}>{lot.name}</ThemedText>
-            </View>
-          ))}
-        </View>
-        
-        {/* Legend */}
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: Colors.primary }]} />
-            <ThemedText style={styles.legendText}>Buildings</ThemedText>
+      <View style={styles.googleMapContainer}>
+        {GOOGLE_MAPS_API_KEY && 
+         GOOGLE_MAPS_API_KEY.length > 10 && 
+         !GOOGLE_MAPS_API_KEY.includes('YOUR_GOOGLE_MAPS_API_KEY') ? (
+          <WebView
+            source={{ html: createGoogleMapsHTML() }}
+            style={styles.webview}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+          />
+        ) : (
+          <View style={styles.apiKeyWarning}>
+            <ThemedText style={styles.warningText}>
+              ⚠️ Please add your Google Maps API key in{'\n'}
+              constants/api.ts{'\n\n'}
+              Replace 'YOUR_GOOGLE_MAPS_API_KEY_HERE' with your actual API key
+            </ThemedText>
           </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: Colors.white, borderColor: Colors.primary, borderWidth: 2 }]} />
-            <ThemedText style={styles.legendText}>Parking</ThemedText>
-          </View>
-        </View>
-      </View>
-      
-      {/* Quick Info */}
-      <View style={styles.infoSection}>
-        <ThemedText type="subtitle" style={styles.infoTitle}>Quick Links</ThemedText>
-        <View style={styles.infoGrid}>
-          <View style={styles.infoCard}>
-            <ThemedText type="defaultSemiBold" style={styles.infoCardTitle}>6</ThemedText>
-            <ThemedText style={styles.infoCardLabel}>Buildings</ThemedText>
-          </View>
-          <View style={styles.infoCard}>
-            <ThemedText type="defaultSemiBold" style={styles.infoCardTitle}>3</ThemedText>
-            <ThemedText style={styles.infoCardLabel}>Parking Lots</ThemedText>
-          </View>
-        </View>
+        )}
       </View>
     </ThemedView>
   );
@@ -103,9 +77,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    paddingTop: 60,
+    paddingTop: Spacing.xl * 2 + 20,
     paddingBottom: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     backgroundColor: Colors.primary,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -113,107 +87,34 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.white,
     marginBottom: Spacing.sm,
+    marginTop: Spacing.sm,
   },
   subtitle: {
     color: Colors.white,
     opacity: 0.9,
+    marginBottom: Spacing.sm,
   },
-  mapContainer: {
+  googleMapContainer: {
     flex: 1,
-    padding: Spacing.lg,
+    backgroundColor: Colors.background,
   },
-  map: {
+  webview: {
     flex: 1,
-    backgroundColor: Colors.backgroundAlt,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    position: 'relative',
-    minHeight: 400,
+    backgroundColor: Colors.background,
   },
-  building: {
-    position: 'absolute',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: 8,
-    minWidth: 80,
-    alignItems: 'center',
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  buildingText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  parkingLot: {
-    position: 'absolute',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: 8,
-    borderWidth: 2,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  parkingText: {
-    color: Colors.primary,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  legend: {
-    flexDirection: 'row',
+  apiKeyWarning: {
+    flex: 1,
     justifyContent: 'center',
-    marginTop: Spacing.md,
-    gap: Spacing.lg,
-  },
-  legendItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  legendColor: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-  },
-  legendText: {
-    fontSize: 14,
-  },
-  infoSection: {
-    padding: Spacing.lg,
+    padding: Spacing.xl,
     backgroundColor: Colors.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
   },
-  infoTitle: {
-    marginBottom: Spacing.md,
+  warningText: {
     color: Colors.primary,
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  infoCard: {
-    flex: 1,
-    backgroundColor: Colors.backgroundAlt,
-    padding: Spacing.lg,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.primary,
-  },
-  infoCardTitle: {
-    fontSize: 32,
-    color: Colors.primary,
-    marginBottom: Spacing.xs,
-  },
-  infoCardLabel: {
     fontSize: 14,
-    color: Colors.textLight,
+    textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 22,
   },
 });
 

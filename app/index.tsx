@@ -18,7 +18,7 @@ interface User {
 interface MenuItem {
   title: string;
   description: string;
-  route: '/faculty' | '/parking' | '/map' | '/appointments';
+  route: '/faculty' | '/parking' | '/map' | '/appointments' | '/complaints';
   icon: string;
 }
 
@@ -108,6 +108,16 @@ export default function HomeScreen() {
           : 'Manage appointments',
         route: '/appointments',
         icon: '📅',
+      });
+      
+      // Add Complaints for all logged-in users
+      items.push({
+        title: 'Complaints',
+        description: user.role === 'student' 
+          ? 'Submit and track complaints' 
+          : 'View and manage complaints',
+        route: '/complaints',
+        icon: '📋',
       });
     }
 
