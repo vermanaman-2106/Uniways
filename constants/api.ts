@@ -1,12 +1,13 @@
 // API Configuration
-// For iOS Simulator/Android Emulator: use localhost
-// For physical device: replace localhost with your computer's IP address
-// Find your IP: Mac: ipconfig getifaddr en0 | Windows: ipconfig (look for IPv4)
+// Production backend URL - used for Expo Go sharing and production builds
+// For local development, you can temporarily change this to 'http://localhost:3000/api'
 
-export const API_BASE_URL = __DEV__
-  ? 'http://localhost:3000/api' // For simulator/emulator (local development)
-  // ? 'http://YOUR_IP_ADDRESS:3000/api' // For physical device - uncomment and add your IP
-  : 'https://uniways-backend.onrender.com/api'; // Production backend URL
+export const API_BASE_URL = 'https://uniways-backend.onrender.com/api';
+
+// Alternative: Use localhost only when running locally (uncomment if needed)
+// export const API_BASE_URL = __DEV__
+//   ? 'http://localhost:3000/api' // For local development only
+//   : 'https://uniways-backend.onrender.com/api'; // Production backend URL
 
 export const API_ENDPOINTS = {
   faculty: '/faculty',
