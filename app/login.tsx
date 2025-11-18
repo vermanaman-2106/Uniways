@@ -24,11 +24,18 @@ export default function LoginScreen() {
     setError(null);
 
     try {
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
@@ -36,17 +43,30 @@ export default function LoginScreen() {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store token
+      // Store token and user data to avoid redundant API call
       if (data.data && data.data.token) {
         await AsyncStorage.setItem('token', data.data.token);
+        // Store user data temporarily to skip auth check on home screen
+        if (data.data.id && data.data.name && data.data.email && data.data.role) {
+          await AsyncStorage.setItem('userData', JSON.stringify({
+            _id: data.data.id,
+            name: data.data.name,
+            email: data.data.email,
+            role: data.data.role,
+          }));
+        }
       }
       
       // Navigate to home
       router.replace('/');
     } catch (err) {
       setLoading(false);
-      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
-      setError(errorMessage);
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timeout. Please check your connection and try again.');
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+        setError(errorMessage);
+      }
     }
   };
 

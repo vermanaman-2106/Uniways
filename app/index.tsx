@@ -36,26 +36,81 @@ export default function HomeScreen() {
         return;
       }
 
-      // Fetch user info
+      // Check if we have cached user data from login (avoid redundant API call)
+      const cachedUserData = await AsyncStorage.getItem('userData');
+      if (cachedUserData) {
+        try {
+          const userData = JSON.parse(cachedUserData);
+          setUser(userData);
+          setCheckingAuth(false);
+          setLoading(false);
+          
+          // Verify token in background (non-blocking)
+          fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                // Update with fresh data
+                setUser(data.data);
+                AsyncStorage.setItem('userData', JSON.stringify(data.data));
+              }
+            })
+            .catch(() => {
+              // Silent fail - we already have cached data
+            });
+          
+          return;
+        } catch (e) {
+          // Invalid cached data, continue with API call
+        }
+      }
+
+      // Fetch user info with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
       if (response.ok && data.success) {
         setUser(data.data);
+        // Cache user data for faster subsequent loads
+        await AsyncStorage.setItem('userData', JSON.stringify(data.data));
       } else {
         // Invalid token, clear and redirect to welcome
         await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('userData');
         router.push('/welcome' as any);
       }
     } catch (error) {
       console.error('Error checking auth:', error);
-      await AsyncStorage.removeItem('token');
-      router.push('/welcome' as any);
+      // If timeout or network error, check if we have cached data
+      const cachedUserData = await AsyncStorage.getItem('userData');
+      if (cachedUserData) {
+        try {
+          const userData = JSON.parse(cachedUserData);
+          setUser(userData);
+        } catch (e) {
+          await AsyncStorage.removeItem('token');
+          await AsyncStorage.removeItem('userData');
+          router.push('/welcome' as any);
+        }
+      } else {
+        await AsyncStorage.removeItem('token');
+        router.push('/welcome' as any);
+      }
     } finally {
       setCheckingAuth(false);
       setLoading(false);
@@ -71,6 +126,7 @@ export default function HomeScreen() {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('userData'); // Clear cached user data
       router.replace('/login');
     } catch (error) {
       console.error('Error logging out:', error);
